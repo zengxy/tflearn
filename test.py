@@ -6,7 +6,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 def test1():
     convolutional.main()
 
-def test2():
+def softmaxClassify():
     W = tf.Variable(tf.random_uniform([784, 10], -1., 1.))
     b = tf.Variable(tf.zeros([10]))
 
