@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
+import time
 
 
 def weight_variable(shape):
@@ -37,7 +38,7 @@ def cnn():
 
     # convolution 2
     W_conv2 = weight_variable([5, 5, 32, 64])
-    b_conv2 = weight_variable([64])
+    b_conv2 = bias_variable([64])
     h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 
     # max pool 2
@@ -46,7 +47,7 @@ def cnn():
 
     # full connect 1
     W_fc1 = weight_variable([7 * 7 * 64, 1024])
-    b_fc1 = weight_variable([1024])
+    b_fc1 = bias_variable([1024])
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
     # drop out
@@ -57,31 +58,34 @@ def cnn():
     w_softmax = weight_variable([1024, 10])
     b_softmax = bias_variable([10])
 
-    y = tf.matmul(h_fc1_drop, w_softmax) + b_softmax
+    y = tf.nn.softmax(tf.matmul(h_fc1_drop, w_softmax) + b_softmax)
     cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
 
-
-    update = tf.train.MomentumOptimizer(0.01, 0.9).minimize(cross_entropy)
+    update = tf.train.GradientDescentOptimizer(0.001).minimize(cross_entropy)
 
     correct_prediction = tf.equal(tf.arg_max(y, 1), tf.arg_max(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
-        for i in range(1000):
+        start = time.time()
+        for i in range(20000):
+            xs, ys = mnist.train.next_batch(50)
             if i % 50 == 0:
-                print("Step: ", i,
-                      "Accuracy: ", sess.run(accuracy,
-                                             feed_dict={x: mnist.test.images,
-                                                        y_: mnist.test.labels,
-                                                        keep_prob: 1.0
-                                                        })
+                timecos = time.time()-start
+                start = time.time()
+                print("Step: {:d},Accuracy: {:.3f}, timeCos: {:.1f}".
+                      format(i,
+                             sess.run(accuracy,
+                                      feed_dict={x: mnist.validation.images,
+                                                 y_: mnist.validation.labels,
+                                                 keep_prob: 1.0
+                                                 }),
+                             timecos*1000/50
+                             )
                       )
-
-            xs, ys = mnist.train.next_batch(100)
             sess.run(update,
-                     feed_dict={x: xs, y_: ys, keep_prob: 0.8})
-    print(h_pool1.get_shape())
+                     feed_dict={x: xs, y_: ys, keep_prob: 0.5})
 
 
 def shape_test():
