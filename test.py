@@ -35,8 +35,9 @@ def softmaxClassify():
                       )
 
 if __name__ == '__main__':
-    test2()
-
+    test1()
+    # softmaxClassify()
+    # print(convolutional.data_type())
 
 
 
