@@ -3,10 +3,6 @@ import input_data
 import collections
 import numpy as np
 
-FLAGS = tf.app.flags.FLAGS
-
-tf.app.flags.DEFINE_string('data_dir', "../data/cifar10", """Directory of dataset""")
-tf.app.flags.DEFINE_string('model_dir', "../data/c")
 
 conv_parmas = collections.namedtuple("conv_params",
                                      ["window_width",
