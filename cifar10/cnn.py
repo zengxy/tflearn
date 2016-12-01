@@ -53,20 +53,20 @@ def inference(images,
                                       padding=max_pool_2_params.padding)
 
     h_max_pool_2_shape = h_max_pool_2.get_shape()
-    flat_dim = np.prod(h_max_pool_2_shape[1:])
+    flat_dim = int(np.prod(h_max_pool_2_shape[1:]))
     h_max_pool_2_flat = tf.reshape(h_max_pool_2, shape=[-1, flat_dim])
 
     with tf.name_scope("fully_connected"):
         W = tf.Variable(tf.truncated_normal(shape=[flat_dim, full_connected_units],
                                             stddev=np.sqrt(flat_dim)))
         b = tf.Variable(tf.zeros([full_connected_units]))
-        h_fc = tf.nn.relu(tf.mul(h_max_pool_2_flat, W) + b)
+        h_fc = tf.nn.relu(tf.matmul(h_max_pool_2_flat, W) + b)
 
     with tf.name_scope('softmax_out'):
         W = tf.Variable(tf.truncated_normal(shape=[full_connected_units, input_data.LABEL_NUM],
                                             stddev=np.sqrt(full_connected_units)))
         b = tf.Variable(tf.zeros([input_data.LABEL_NUM]))
-        logits = tf.mul(h_fc, W) + b
+        logits = tf.matmul(h_fc, W) + b
     return logits
 
 

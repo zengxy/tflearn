@@ -1,6 +1,7 @@
 import os
 
 import tensorflow as tf
+import numpy as np
 
 import cnn as nn_structure
 import input_data
@@ -12,7 +13,7 @@ tf.app.flags.DEFINE_string("model_dir",
                            "Directory of model.")
 tf.app.flags.DEFINE_integer("batch_size", 128, "Batch size")
 tf.app.flags.DEFINE_integer("max_step", 10000, "Max iteration step")
-tf.app.flags.DEFINE_float("learning_rate", 0.001, "learning rate")
+tf.app.flags.DEFINE_float("learning_rate", 0.01, "learning rate")
 # tf.app.flags.DEFINE_integer("fully connected units", 128, "units num")
 
 # 网络参数
@@ -36,9 +37,9 @@ def place_holder(batch_size):
 
 
 def fill_feed_dic(dataSet, image_placeholder, label_placeholder):
-    images, labels = dataSet.next_batch()
-    images = tf.reshape(images,
-                        [-1, input_data.IMAGE_WIDTH, input_data.IMAGE_HEIGHT, input_data.IMAGE_CHANNEL])
+    images, labels = dataSet.next_batch(FLAGS.batch_size)
+    images = np.reshape(images,
+                        [FLAGS.batch_size, input_data.IMAGE_WIDTH, input_data.IMAGE_HEIGHT, input_data.IMAGE_CHANNEL])
     return {
         image_placeholder: images,
         label_placeholder: labels
@@ -56,13 +57,17 @@ def run_training():
         loss = nn_structure.loss(logits, label_pl)
         train_op = nn_structure.train(loss, FLAGS.learning_rate)
         init = tf.initialize_all_variables()
+        eval = nn_structure.evaluation(logits, label_pl, k=3)
 
         with tf.Session() as sess:
             sess.run(init)
-            filled_dict = fill_feed_dic(train_op, image_pl, label_pl)
-            for i in range(FLAGS.max_setp):
-                _, loss = sess.run([train_op, loss], feed_dict=filled_dict)
-                print(i, loss)
+            filled_dict = fill_feed_dic(train_data, image_pl, label_pl)
+            for i in range(FLAGS.max_step):
+                _, loss_value, eval_value = sess.run([train_op, loss, eval], feed_dict=filled_dict)
+                if i%100 == 0:
+                    print(i, loss_value, eval_value)
+                    # a = train_data.next_batch(FLAGS.batch_size)[1]
+                    # print(a)
 
 
 def main(_):
