@@ -53,6 +53,6 @@ def train(loss, learning_rate):
     return train_op
 
 
-def evalutaion(logits, labels):
+def evaluation(logits, labels):
     correct = tf.nn.in_top_k(logits, labels, 1)
     return tf.reduce_sum(tf.cast(correct, tf.int32))

@@ -1,9 +1,10 @@
-import tensorflow as tf
-import time
 import os
+import time
 
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-import fully_connected_2_hidden as nn_structure
+
+import fully_connected_2 as nn_structure
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -13,7 +14,10 @@ flags.DEFINE_integer("max_step", 2000, "Numbers of training steps.")
 flags.DEFINE_integer("hidden1_unit", 128, "Numbers of hidden1 layer units.")
 flags.DEFINE_integer("hidden2_unit", 32, "Numbers of hidden2 layer units.")
 flags.DEFINE_integer("batch_size", 100, "Batch size for training.")
-flags.DEFINE_string("training_data_dir", "../MNIST_data", "Directory of training data.")
+flags.DEFINE_string("training_data_dir", "../data/MNIST_data", "Directory of training data.")
+flags.DEFINE_string("model_dir",
+                    os.path.join("../model/", nn_structure.__name__),
+                    "Directory of model.")
 flags.DEFINE_boolean("fake_data", False, 'If True, use fake_date for unit test')
 
 
@@ -62,7 +66,7 @@ def run_training():
         saver = tf.train.Saver()
 
         with tf.Session() as sess:
-            summary_writer = tf.train.SummaryWriter(FLAGS.training_data_dir, sess.graph)
+            summary_writer = tf.train.SummaryWriter(FLAGS.model_dir, sess.graph)
             sess.run(init)
             start_time = time.time()
             for step in range(FLAGS.max_step):
@@ -90,7 +94,7 @@ def run_training():
                     print("Test Eval:")
                     do_eval(sess, eval_correct, test_data, images_pl, labels_pl)
 
-                    checkpoint_file = os.path.join(FLAGS.training_data_dir, "checkpoint")
+                    checkpoint_file = os.path.join(FLAGS.model_dir, "checkpoint")
                     saver.save(sess, checkpoint_file, global_step=step)
 
 
@@ -98,4 +102,6 @@ def main(_):
     run_training()
 
 if __name__ == '__main__':
-    tf.app.run()
+    # tf.app.run()
+    a = nn_structure
+    print(nn_structure.__name__)

@@ -22,7 +22,7 @@ def max_pool_2x2(x):
 
 
 def cnn():
-    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+    mnist = input_data.read_data_sets("../data/MNIST_data/", one_hot=True)
     x = tf.placeholder(tf.float32, [None, 28 * 28])
     y_ = tf.placeholder(tf.float32, [None, 10])
 
@@ -98,5 +98,7 @@ def shape_test():
 
 
 if __name__ == '__main__':
-    cnn()
+    # cnn()
     # shape_test()
+    mnist = input_data.read_data_sets("../data/MNIST_data/", one_hot=True)
+    print(type(mnist.train))

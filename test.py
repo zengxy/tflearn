@@ -2,10 +2,13 @@ import tensorflow as tf
 from tensorflow.models.image.mnist import convolutional
 from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.examples.tutorials import mnist
+from tensorflow.models.image.cifar10 import cifar10
 import pprint
+
 
 def test1():
     convolutional.main()
+
 
 def softmaxClassify():
     W = tf.Variable(tf.random_uniform([784, 10], -1., 1.))
@@ -46,12 +49,13 @@ def test_of_softmax_cross_entropy_with_logits():
 
     cross_entropy2 = tf.nn.softmax_cross_entropy_with_logits(x_input, y_)
 
-    cross_entropy3 = tf.nn.sparse_softmax_cross_entropy_with_logits(y, tf.constant([2,2]))
+    cross_entropy3 = tf.nn.sparse_softmax_cross_entropy_with_logits(y, tf.constant([2, 2]))
 
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         for item in sess.run([y, y_ * tf.log(y), cross_entropy, cross_entropy2, cross_entropy3]):
             pprint.pprint(item)
+
 
 def testOpOrder():
     a = tf.Variable(1)
@@ -74,15 +78,34 @@ def testOpOrder():
         print(sess.run([a, updateTwo, a]))
 
 
-
+def test_read_cifar10():
+    FLAGS = tf.app.flags.FLAGS
+    tf.app.flags.DEFINE_string('my_train_dir', '../cifar10_model/model1',
+                               """Directory where to write event logs """
+                               """and checkpoint.""")
+    cifar10.maybe_download_and_extract()
+    if tf.gfile.Exists(FLAGS.my_train_dir):
+        tf.gfile.DeleteRecursively(FLAGS.my_train_dir)
+    tf.gfile.MakeDirs(FLAGS.my_train_dir)
+    with tf.Session() as sess:
+        images, labels = cifar10.distorted_inputs()
+        sess.run(tf.initialize_all_variables())
+        a, b = sess.run([images, labels])
+        print(len(a), len(a[0]))
 
 
 
 
 
 if __name__ == '__main__':
-    testOpOrder()
-    # mnist_data_set = input_data.read_data_sets("MNIST_data/", one_hot=True)
+    # test_read_cifar10()
+    FLAGS = tf.app.flags.FLAGS
+    import os
+    tf.app.flags.DEFINE_string('my_train_dir',
+                               os.path.join('../cifar10_model/model1', os.path.basename(__file__).split(".")[0]),
+                               "1111")
+    print(os.path.join('../cifar10_model/model1', os.path.basename(__file__).split(".")[0]))
+    # mnist_data_set = input_data.py.read_data_sets("MNIST_data/", one_hot=True)
     # for i in range(20):
     #     print(mnist_data_set.test.next_batch(1000)[1][0])
     # test_of_softmax_cross_entropy_with_logits()
@@ -95,10 +118,3 @@ if __name__ == '__main__':
     # print(a, b, _)
     # softmaxClassify()
     # print(convolutional.data_type())
-
-
-
-
-
-
-
