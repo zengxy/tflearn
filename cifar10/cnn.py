@@ -1,8 +1,8 @@
 import tensorflow as tf
-import input_data
 import collections
 import numpy as np
 
+FLAGS = tf.app.flags.FLAGS
 
 conv_parmas = collections.namedtuple("conv_params",
                                      ["window_width",
@@ -19,11 +19,12 @@ max_pool_params = collections.namedtuple("max_pool_params",
 def inference(images,
               conv_1_params, max_pool_1_params,
               conv_2_params, max_pool_2_params,
-              full_connected_units):
+              full_connected_units,
+              keep_prob):
     with tf.name_scope("conv1"):
         W = tf.Variable(tf.truncated_normal([conv_1_params.window_width,
                                              conv_1_params.window_height,
-                                             input_data.IMAGE_CHANNEL,
+                                             FLAGS.IMAGE_CHANNEL,
                                              conv_1_params.out_channel],
                                             stddev=0.1))
         b = tf.Variable(tf.zeros([conv_1_params.out_channel]))
@@ -62,11 +63,14 @@ def inference(images,
         b = tf.Variable(tf.zeros([full_connected_units]))
         h_fc = tf.nn.relu(tf.matmul(h_max_pool_2_flat, W) + b)
 
+    with tf.name_scope("drop_out"):
+        h_fc_dropped = tf.nn.dropout(h_fc, keep_prob=keep_prob)
+
     with tf.name_scope('softmax_out'):
-        W = tf.Variable(tf.truncated_normal(shape=[full_connected_units, input_data.LABEL_NUM],
+        W = tf.Variable(tf.truncated_normal(shape=[full_connected_units, FLAGS.LABEL_NUM],
                                             stddev=np.sqrt(full_connected_units)))
-        b = tf.Variable(tf.zeros([input_data.LABEL_NUM]))
-        logits = tf.matmul(h_fc, W) + b
+        b = tf.Variable(tf.zeros([FLAGS.LABEL_NUM]))
+        logits = tf.matmul(h_fc_dropped, W) + b
     return logits
 
 
@@ -92,8 +96,10 @@ def train(loss, learning_rate):
     return train_op
 
 
-
+def predict(logits):
+    prediction = tf.arg_max(logits, dimension=1)
+    return prediction
 
 
 if __name__ == '__main__':
-    input_data.maybe_download_and_extract(FLAGS.data_dir)
+    pass

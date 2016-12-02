@@ -61,7 +61,7 @@ def cnn():
     y = tf.nn.softmax(tf.matmul(h_fc1_drop, w_softmax) + b_softmax)
     cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
 
-    update = tf.train.GradientDescentOptimizer(0.001).minimize(cross_entropy)
+    update = tf.train.GradientDescentOptimizer(0.0001).minimize(cross_entropy)
 
     correct_prediction = tf.equal(tf.arg_max(y, 1), tf.arg_max(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -72,7 +72,7 @@ def cnn():
         for i in range(20000):
             xs, ys = mnist.train.next_batch(50)
             if i % 50 == 0:
-                timecos = time.time()-start
+                timecos = time.time() - start
                 start = time.time()
                 print("Step: {:d},Accuracy: {:.3f}, timeCos: {:.1f}".
                       format(i,
@@ -81,9 +81,13 @@ def cnn():
                                                  y_: mnist.validation.labels,
                                                  keep_prob: 1.0
                                                  }),
-                             timecos*1000/50
+                             timecos * 1000 / 50
                              )
                       )
+                # print(sess.run(h_fc1_drop, feed_dict={x: mnist.validation.images,
+                #                                       y_: mnist.validation.labels,
+                #                                       keep_prob: 1.0
+                #                                       }))
             sess.run(update,
                      feed_dict={x: xs, y_: ys, keep_prob: 0.5})
 
@@ -98,7 +102,7 @@ def shape_test():
 
 
 if __name__ == '__main__':
-    # cnn()
+    cnn()
     # shape_test()
-    mnist = input_data.read_data_sets("../data/MNIST_data/", one_hot=True)
-    print(type(mnist.train))
+    # mnist = input_data.read_data_sets("../data/MNIST_data/", one_hot=True)
+    # print(type(mnist.train))
