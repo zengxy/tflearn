@@ -9,7 +9,7 @@ def weight_variable(shape):
 
 
 def bias_variable(shape):
-    initial = tf.constant(0.1, shape=shape)
+    initial = tf.constant(0.0, shape=shape)
     return tf.Variable(initial)
 
 
@@ -69,7 +69,7 @@ def cnn():
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         start = time.time()
-        for i in range(20000):
+        for i in range(50000):
             xs, ys = mnist.train.next_batch(50)
             if i % 50 == 0:
                 timecos = time.time() - start

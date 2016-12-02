@@ -21,34 +21,39 @@ def inference(images,
               conv_2_params, max_pool_2_params,
               full_connected_units,
               keep_prob):
-    with tf.name_scope("conv1"):
+    images = tf.reshape(images, [-1, FLAGS.IMAGE_WIDTH, FLAGS.IMAGE_HEIGHT, FLAGS.IMAGE_CHANNEL])
+    with tf.name_scope("conv_1"):
         W = tf.Variable(tf.truncated_normal([conv_1_params.window_width,
                                              conv_1_params.window_height,
                                              FLAGS.IMAGE_CHANNEL,
                                              conv_1_params.out_channel],
-                                            stddev=0.1))
-        b = tf.Variable(tf.zeros([conv_1_params.out_channel]))
-        h_conv1 = tf.nn.relu(tf.nn.conv2d(images, W, conv_1_params.stride, conv_1_params.padding)
-                             + b)
+                                            stddev=0.1),
+                        name="weights")
+        b = tf.Variable(tf.zeros([conv_1_params.out_channel]),
+                        name="biases")
+        h_conv_1 = tf.nn.relu(tf.nn.conv2d(images, W, conv_1_params.stride, conv_1_params.padding)
+                              + b)
 
-    with tf.name_scope("max_pool1"):
-        h_max_pool_1 = tf.nn.max_pool(h_conv1,
+    with tf.name_scope("max_pool_1"):
+        h_max_pool_1 = tf.nn.max_pool(h_conv_1,
                                       ksize=max_pool_1_params.ksize,
                                       strides=max_pool_1_params.stride,
                                       padding=max_pool_1_params.padding)
 
-    with tf.name_scope("conv2"):
+    with tf.name_scope("conv_2"):
         W = tf.Variable(tf.truncated_normal([conv_2_params.window_width,
                                              conv_2_params.window_height,
                                              conv_1_params.out_channel,
                                              conv_2_params.out_channel],
-                                            stddev=0.1))
-        b = tf.Variable(tf.zeros([conv_2_params.out_channel]))
-        h_conv2 = tf.nn.relu(tf.nn.conv2d(h_max_pool_1, W, conv_2_params.stride, conv_2_params.padding)
-                             + b)
+                                            stddev=0.1),
+                        name="weights")
+        b = tf.Variable(tf.zeros([conv_2_params.out_channel]),
+                        name="biases")
+        h_conv_2 = tf.nn.relu(tf.nn.conv2d(h_max_pool_1, W, conv_2_params.stride, conv_2_params.padding)
+                              + b)
 
-    with tf.name_scope("max_pool1"):
-        h_max_pool_2 = tf.nn.max_pool(h_conv2,
+    with tf.name_scope("max_pool_2"):
+        h_max_pool_2 = tf.nn.max_pool(h_conv_2,
                                       ksize=max_pool_2_params.ksize,
                                       strides=max_pool_2_params.stride,
                                       padding=max_pool_2_params.padding)
@@ -59,8 +64,10 @@ def inference(images,
 
     with tf.name_scope("fully_connected"):
         W = tf.Variable(tf.truncated_normal(shape=[flat_dim, full_connected_units],
-                                            stddev=np.sqrt(flat_dim)))
-        b = tf.Variable(tf.zeros([full_connected_units]))
+                                            stddev=0.1),
+                        name="weights")
+        b = tf.Variable(tf.zeros([full_connected_units]),
+                        name="biases")
         h_fc = tf.nn.relu(tf.matmul(h_max_pool_2_flat, W) + b)
 
     with tf.name_scope("drop_out"):
@@ -68,8 +75,9 @@ def inference(images,
 
     with tf.name_scope('softmax_out'):
         W = tf.Variable(tf.truncated_normal(shape=[full_connected_units, FLAGS.LABEL_NUM],
-                                            stddev=np.sqrt(full_connected_units)))
-        b = tf.Variable(tf.zeros([FLAGS.LABEL_NUM]))
+                                            stddev=0.1),
+                        name="weights")
+        b = tf.Variable(tf.zeros([FLAGS.LABEL_NUM]), name="biases")
         logits = tf.matmul(h_fc_dropped, W) + b
     return logits
 
