@@ -1,27 +1,25 @@
 import os
-import pprint
+import time
 
 import tensorflow as tf
-import numpy as np
+# from tensorflow.examples.tutorials.mnist import input_data
+import input_data
 
 import cnn as nn_structure
-# import input_data
-from tensorflow.examples.tutorials.mnist import input_data
-import time
 
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string("model_dir",
                            os.path.join("../model/", nn_structure.__name__),
                            "Directory of model.")
-tf.app.flags.DEFINE_integer("batch_size", 50, "Batch size")
-tf.app.flags.DEFINE_integer("max_step", 10000, "Max iteration step")
-tf.app.flags.DEFINE_float("learning_rate", 0.001, "learning rate")
+tf.app.flags.DEFINE_integer("batch_size", 128, "Batch size")
+tf.app.flags.DEFINE_integer("max_step", 50000, "Max iteration step")
+tf.app.flags.DEFINE_float("learning_rate", 0.0001, "learning rate")
 # tf.app.flags.DEFINE_integer("fully connected units", 128, "units num")
-tf.app.flags.DEFINE_integer("IMAGE_WIDTH", 28, "image width")
-tf.app.flags.DEFINE_integer("IMAGE_HEIGHT", 28, "image height")
-tf.app.flags.DEFINE_integer("IMAGE_CHANNEL", 1, "image channel")
-tf.app.flags.DEFINE_integer("IMAGE_PIXES", 28*28*1, "pixes number")
+tf.app.flags.DEFINE_integer("IMAGE_WIDTH", 32, "image width")
+tf.app.flags.DEFINE_integer("IMAGE_HEIGHT", 32, "image height")
+tf.app.flags.DEFINE_integer("IMAGE_CHANNEL", 3, "image channel")
+tf.app.flags.DEFINE_integer("IMAGE_PIXES", 32*32*3, "pixes number")
 tf.app.flags.DEFINE_integer("LABEL_NUM", 10, "label number")
 
 # 网络参数
@@ -69,7 +67,11 @@ def do_eval(sess, eval_correct, data_set, images_placeholder, labels_placeholder
 
 
 def run_training():
-    train_data, test_data, validation_data = input_data.read_data_sets("../data/MNIST_data/")
+    # for mnist
+    # train_data, test_data, validation_data = input_data.read_data_sets("../data/MNIST_data/")
+    # for cifar-10
+    train_data, test_data, validation_data = input_data.load_data()
+
     with tf.Graph().as_default():
         image_pl, label_pl, keep_prob_pl = place_holder(FLAGS.batch_size)
         logits = nn_structure.inference(image_pl,

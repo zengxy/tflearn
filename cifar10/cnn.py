@@ -88,7 +88,8 @@ def loss(logits, labels):
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits, labels, name="cross_entropy")
     else:
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits, labels, name="cross_entropy")
-    loss = tf.reduce_mean(cross_entropy, name="cross_entropy_mean")
+    # mnist, learning=1e-4, batch_size=50, reduce_sum比reduce_mean好太多
+    loss = tf.reduce_sum(cross_entropy, name="cross_entropy_mean")
     return loss
 
 
