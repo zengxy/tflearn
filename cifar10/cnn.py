@@ -22,7 +22,7 @@ def inference(images,
               full_connected_units,
               keep_prob):
     # cifar-10数据的原始格式为 red(1024) + blue(1024) + green(1024), batch为NCHW格式
-    images = tf.reshape(images, [-1, FLAGS.IMAGE_CHANNE, FLAGS.IMAGE_HEIGHT, FLAGS.IMAGE_WIDTH])
+    images = tf.reshape(images, [-1, FLAGS.IMAGE_CHANNEL, FLAGS.IMAGE_HEIGHT, FLAGS.IMAGE_WIDTH])
     # transpose为NHWC格式为:(red, blue, green)*1024
     images = tf.transpose(images, [0, 2, 3, 1])
     with tf.name_scope("conv_1"):
@@ -34,7 +34,7 @@ def inference(images,
                         name="weights")
         b = tf.Variable(tf.zeros([conv_1_params.out_channel]),
                         name="biases")
-        h_conv_1 = tf.nn.relu(tf.nn.conv2d(images, W, conv_1_params.stride, conv_1_params.padding, data_format="NCHW")
+        h_conv_1 = tf.nn.relu(tf.nn.conv2d(images, W, conv_1_params.stride, conv_1_params.padding)
                               + b)
 
     with tf.name_scope("max_pool_1"):
