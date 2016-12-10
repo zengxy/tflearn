@@ -11,7 +11,9 @@ from tensorflow.python.framework import dtypes
 FLAGS = tf.app.flags.FLAGS
 
 DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz'
-tf.app.flags.DEFINE_string("data_dir", "../data/cifar10", "Directory of data dir.")
+tf.app.flags.DEFINE_string("data_dir",
+                           os.path.join(os.path.dirname(os.path.dirname(__file__)), "data/cifar10"),
+                           "Directory of data dir.")
 
 IMAGE_WIDTH = 32
 IMAGE_HEIGHT = 32
@@ -150,7 +152,7 @@ def shuffle(data_set):
     data = data_set.data
     label = data_set.label
     p = np.random.permutation(len(data))
-    return Dataset(data[p], label[p])
+    return DataSet(data[p], label[p])
 
 
 if __name__ == '__main__':
