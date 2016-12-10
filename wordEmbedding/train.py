@@ -5,10 +5,10 @@ import word2vec
 import time
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer("vocabulary_size", 50000, "vocabulary_size")
+tf.app.flags.DEFINE_integer("vocabulary_size", 40000, "vocabulary_size")
 tf.app.flags.DEFINE_float("learning_rate", 1.0, "learning_rate")
 tf.app.flags.DEFINE_integer("max_step", 100001, "max_step")
-tf.app.flags.DEFINE_integer("validation_size", 100, "validation_size")
+tf.app.flags.DEFINE_integer("validation_size", 10, "validation_size")
 tf.app.flags.DEFINE_integer("embedding_size", 70, "embedding_size")
 tf.app.flags.DEFINE_integer("neg_sampled", 70, "neg_sampled")
 
@@ -32,9 +32,9 @@ def fill_feed_dict(dataSet, batch_inputs, batch_labels,
 
 
 def run_training():
-    text_dataset = input_data.load_data()
-    valid_window = np.array(range(1, 1001))
-    sample_p = (1001 - valid_window) / np.sum(valid_window)
+    text_dataset = input_data.load_data("yitian.txt", max_vocabulary_size=40000)
+    valid_window = np.array(range(5, 15))
+    sample_p = (19 - valid_window) / np.sum(valid_window)
     valid_ids = np.random.choice(valid_window, FLAGS.validation_size, p=sample_p, replace=False)
 
     with tf.Graph().as_default():
@@ -56,7 +56,7 @@ def run_training():
                 if step % 1000 == 0:
                     duration = time.time() - start_time
                     print("Step: {:d}, Training Loss: {:.4f}, {:.1f}us/step".
-                          format(step, loss_value, duration*1000))
+                          format(step, loss_value, duration * 1000))
 
                 if (step + 1) % 5000 == 0 or (step + 1) == FLAGS.max_step:
                     sim_words_id, _ = sess.run(sim_compute, {valid_ids_pl: valid_ids})

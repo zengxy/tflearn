@@ -5,6 +5,8 @@ import urllib.request
 import zipfile
 import numpy as np
 import random
+import jieba
+import string
 
 import tensorflow as tf
 
@@ -18,7 +20,7 @@ tf.app.flags.DEFINE_string("data_dir",
 class DataSet(object):
     def __init__(self,
                  words,
-                 vocabulary_size=50000,
+                 max_vocabulary_size=50000,
                  rare_words_mark='UNK'):
         '''
         根据文本构建词汇表
@@ -28,13 +30,16 @@ class DataSet(object):
         reverse_dictionary: index: word
         '''
         self._words = words
-        self._vocabulary_size = vocabulary_size
+        self._vocabulary_size = max_vocabulary_size
         self._rare_words_mark = rare_words_mark
 
         self._word_count = [[rare_words_mark, -1]]
         self._word_index_dict = dict()
         self._data = list()
         self.build_dataset()
+
+        # 语料中的word可能比vocabulary_size少
+        self._vocabulary_size = min(max_vocabulary_size, len(self._word_count))
 
         self._epochs_completed = 0
         self._index_in_epoch = 0
@@ -54,7 +59,7 @@ class DataSet(object):
         self._word_count[0][1] = unk_count
         # reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
 
-    def next_batch(self, batch_size, num_skips, skip_window, sample_model = "skip_gram"):
+    def next_batch(self, batch_size, num_skips, skip_window, sample_model="skip_gram"):
         if sample_model == "skip_gram":
             return self._next_batch_skip_gram(batch_size, num_skips, skip_window)
 
@@ -99,6 +104,10 @@ class DataSet(object):
     def word_count(self):
         return self._word_count
 
+    @property
+    def vocabulary_size(self):
+        return self._vocabulary_size
+
 
 def maybe_download(data_dir):
     """Download a file if not present"""
@@ -120,7 +129,27 @@ def maybe_download(data_dir):
     return filepath
 
 
-def load_data():
+def load_data(filename="text8.zip", encoding="utf-8", max_vocabulary_size=50000):
+    if filename == "text8.zip":
+        return _load_text8_data()
+    return _load_text_data(filename, encoding, max_vocabulary_size)
+
+
+def _load_text_data(filename, encoding, max_vocabulary_size):
+    file_path = os.path.join(FLAGS.data_dir, filename)
+    with open(file_path, encoding=encoding) as f:
+        punctuation = string.punctuation + "～`@#￥%……&×（）——+-={}|·「」|、：;“‘’”《》，。？/\n\t\r"
+        text = f.read()
+    for dicfilename in ["bangs.txt", "kungfu.txt", "names.txt"]:
+        dicfile = os.path.join(FLAGS.data_dir, dicfilename)
+        with open(dicfile) as f:
+            jieba.load_userdict(f)
+    words = list(filter(lambda word: word not in punctuation, jieba.cut(text)))
+    text_dataset = DataSet(words, max_vocabulary_size=max_vocabulary_size)
+    return text_dataset
+
+
+def _load_text8_data():
     filepath = maybe_download(FLAGS.data_dir)
     with zipfile.ZipFile(filepath) as f:
         words = f.read(f.namelist()[0]).decode("utf-8").split(" ")
