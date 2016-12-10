@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow.models.image.mnist import convolutional
 from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.examples.tutorials import mnist
-from tensorflow.models.image.cifar10 import cifar10
 import pprint
 
 
@@ -79,6 +78,7 @@ def testOpOrder():
 
 
 def test_read_cifar10():
+    from tensorflow.models.image.cifar10 import cifar10
     FLAGS = tf.app.flags.FLAGS
     tf.app.flags.DEFINE_string('my_train_dir', '../cifar10_model/model1',
                                """Directory where to write event logs """
@@ -93,18 +93,14 @@ def test_read_cifar10():
         a, b = sess.run([images, labels])
         print(len(a), len(a[0]))
 
-
-
-
-
-if __name__ == '__main__':
+def tttt():
     # test_read_cifar10()
     FLAGS = tf.app.flags.FLAGS
     import os
-    tf.app.flags.DEFINE_string('my_train_dir',
-                               os.path.join('../cifar10_model/model1', os.path.basename(__file__).split(".")[0]),
-                               "1111")
-    print(os.path.join('../cifar10_model/model1', os.path.basename(__file__).split(".")[0]))
+    # tf.app.flags.DEFINE_string('my_train_dir',
+    #                            os.path.join('../cifar10_model/model1', os.path.basename(__file__).split(".")[0]),
+    #                            "1111")
+    # print(os.path.join('../cifar10_model/model1', os.path.basename(__file__).split(".")[0]))
     # mnist_data_set = input_data.py.read_data_sets("MNIST_data/", one_hot=True)
     # for i in range(20):
     #     print(mnist_data_set.test.next_batch(1000)[1][0])
@@ -118,3 +114,12 @@ if __name__ == '__main__':
     # print(a, b, _)
     # softmaxClassify()
     # print(convolutional.data_type())
+
+def test_word2vec():
+    from wordEmbedding import input_data
+    data_set = input_data.load_data()
+    for i in range(10):
+        print(data_set.next_batch(10,2,1))
+
+if __name__ == '__main__':
+    test_word2vec()
