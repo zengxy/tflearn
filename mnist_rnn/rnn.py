@@ -33,7 +33,7 @@ def RNN(x, weights, biases):
     # split
     x = tf.split(0, n_step, x)
 
-    lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
+    lstm_cell = rnn_cell.BasicRNNCell(n_hidden)
     out_puts, states = rnn.rnn(lstm_cell, x, dtype=tf.float32)
 
     return tf.matmul(out_puts[-1], weights) + biases

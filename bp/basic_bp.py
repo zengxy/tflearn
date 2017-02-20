@@ -39,9 +39,7 @@ def basic_LR():
 
 def basic_nn():
     X, y = make_data()
-    num_example = len(X)
     nn_input_dim = 2
-    nn_hidden_dim = 4
     nn_output_dim = 2
     leanring_rate = 0.01
     regularization_lambda = 0.01
@@ -102,14 +100,18 @@ def build_model(X, y,
         z2 = a1.dot(W2) + b2
         probs = np.exp(z2) / np.sum(np.exp(z2), axis=1, keepdims=True)
 
-        # back propagation
+        # back propagation可以分为两步
+        # 1. 计算每层的delta
+        # 在softmax和log损失下,delta(n) = logits - y
+        # 2. 计算每层的dw
+        #
         delta3 = probs
         delta3[range(len(X)), y] -= 1
-        dW2 = a1.T.dot(delta3)
-        db2 = np.sum(delta3, axis=0, keepdims=True)
+        dW2 = a1.T * delta3
+        db2 = np.sum(delta3, axis=0)
         delta2 = delta3.dot(W2.T) * (1 - np.power(a1, 2))
         dW1 = X.T.dot(delta2)
-        db1 = np.sum(delta2, axis=0, keepdims=True)
+        db1 = np.sum(delta2, axis=0)
 
         # regularization
         dW2 += regularization * W2
