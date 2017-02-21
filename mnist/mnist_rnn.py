@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.python.ops import rnn, rnn_cell
+from tensorflow.contrib import rnn
 from tensorflow.examples.tutorials.mnist import input_data
 import numpy as np
 
@@ -16,11 +16,12 @@ class MnistRNNModel:
                                  shape=[self._batch_size, self._time_step, self._n_input])
         self._y = tf.placeholder(tf.int32,
                                  shape=[self._batch_size])
-
-        self._basic_rnn_cell = rnn_cell.BasicRNNCell(num_units=self._rnn_hidden_units)
-        self._W = tf.Variable(initial_value=tf.truncated_normal(
-            shape=[self._rnn_hidden_units, self._n_class_num]))
-        self._biases = tf.Variable(tf.zeros(shape=[self._n_class_num]))
+        with tf.variable_scope("rnn"):
+            # self._cell = rnn.BasicRNNCell(num_units=self._rnn_hidden_units)
+            self._cell = rnn.MultiRNNCell([rnn.BasicRNNCell]*3)
+            self._W = tf.Variable(initial_value=tf.truncated_normal(
+                shape=[self._rnn_hidden_units, self._n_class_num]))
+            self._biases = tf.Variable(tf.zeros(shape=[self._n_class_num]))
 
         self._logits = self.inference
         self._y_pred = self.predict
@@ -30,14 +31,17 @@ class MnistRNNModel:
     def inference(self):
         x = tf.transpose(self._x, [1, 0, 2])
         x = tf.reshape(x, [-1, self._n_input])
-        x = tf.split(0, self._time_step, x)
-        # state = self._basic_rnn_cell.zero_state(self._batch_size, dtype=tf.float32)
-        # outputs = []
-        # for _input in x:
-        #     _output, state = self._basic_rnn_cell(_input, state)
-        #     outputs.append(_output)
-        outputs, _ = rnn.rnn(self._basic_rnn_cell, x, dtype=tf.float32)
-        logits = tf.nn.softmax(tf.matmul(outputs[-1], self._W) + self._biases)
+        x = tf.split(x, self._time_step, axis=0)
+        _state = self._cell.zero_state(self._batch_size, dtype=tf.float32)
+        outputs = []
+        with tf.variable_scope("rnn", reuse=True) as vs:
+            for time, _input in enumerate(x):
+                if time > 0:
+                    vs.reuse_variables()
+                _output, _state = self._cell(_input, _state)
+                outputs.append(_output)
+        # outputs, _ = rnn.rnn(self._basic_rnn_cell, x, dtype=tf.float32)
+        logits = tf.matmul(outputs[-1], self._W) + self._biases
         return logits
 
     @property
@@ -53,7 +57,7 @@ class MnistRNNModel:
 
     @property
     def loss(self):
-        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(self._logits, self._y)
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self._logits, labels=self._y)
         return tf.reduce_mean(cross_entropy)
 
     def feed_dict(self, x_feed, y_feed):
@@ -75,14 +79,14 @@ def train_mnist_rnn_model():
     accuracy = mnist_classify_model.accuracy
     train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(mnist_classify_model.loss)
     with tf.Session() as sess:
-        sess.run(tf.initialize_all_variables())
+        sess.run(tf.global_variables_initializer())
         iter_time = 1
         while iter_time<training_iters:
             images, labels = train_data.next_batch(batch_size)
             images = images.reshape([128, 28, 28])
             _, loss_val, acc_val = \
                 sess.run([train_op, loss, accuracy],
-                         feed_dict=mnist_classify_model.feed_dict(images,labels))
+                         feed_dict=mnist_classify_model.feed_dict(images, labels))
             if iter_time%display_step == 0:
                 print("Step: {:d}, Loss: {:.3f}, Accuracy: {:.3f}"
                       .format(iter_time, loss_val, acc_val))
