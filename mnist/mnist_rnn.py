@@ -1,4 +1,6 @@
 import tensorflow as tf
+import tensorlayer as tl
+tl.layers.RNNLayer
 from tensorflow.contrib import rnn
 from tensorflow.examples.tutorials.mnist import input_data
 import numpy as np
@@ -16,12 +18,12 @@ class MnistRNNModel:
                                  shape=[self._batch_size, self._time_step, self._n_input])
         self._y = tf.placeholder(tf.int32,
                                  shape=[self._batch_size])
-        with tf.variable_scope("rnn"):
-            # self._cell = rnn.BasicRNNCell(num_units=self._rnn_hidden_units)
-            self._cell = rnn.MultiRNNCell([rnn.BasicRNNCell]*3)
-            self._W = tf.Variable(initial_value=tf.truncated_normal(
-                shape=[self._rnn_hidden_units, self._n_class_num]))
-            self._biases = tf.Variable(tf.zeros(shape=[self._n_class_num]))
+        # with tf.variable_scope("rnn"):
+        self._cell = rnn.BasicRNNCell(num_units=self._rnn_hidden_units)
+        self._stack_cells = rnn.MultiRNNCell([self._cell] * 3)
+        self._W = tf.Variable(initial_value=tf.truncated_normal(
+            shape=[self._rnn_hidden_units, self._n_class_num]))
+        self._biases = tf.Variable(tf.zeros(shape=[self._n_class_num]))
 
         self._logits = self.inference
         self._y_pred = self.predict
@@ -32,13 +34,13 @@ class MnistRNNModel:
         x = tf.transpose(self._x, [1, 0, 2])
         x = tf.reshape(x, [-1, self._n_input])
         x = tf.split(x, self._time_step, axis=0)
-        _state = self._cell.zero_state(self._batch_size, dtype=tf.float32)
+        _state = self._stack_cells.zero_state(self._batch_size, dtype=tf.float32)
         outputs = []
-        with tf.variable_scope("rnn", reuse=True) as vs:
+        with tf.variable_scope("rnn") as vs:
             for time, _input in enumerate(x):
                 if time > 0:
                     vs.reuse_variables()
-                _output, _state = self._cell(_input, _state)
+                _output, _state = self._stack_cells(_input, _state)
                 outputs.append(_output)
         # outputs, _ = rnn.rnn(self._basic_rnn_cell, x, dtype=tf.float32)
         logits = tf.matmul(outputs[-1], self._W) + self._biases

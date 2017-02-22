@@ -4,3 +4,5 @@ Untitled.ipynb
 data/MNIST_data/
 data/
 model/
+__pycache__/
+mnist/mnist_test.py
