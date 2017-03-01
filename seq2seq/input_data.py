@@ -7,7 +7,7 @@ from collections import namedtuple
 data_dir = "../data/seq2seq/"
 
 
-def load_data(data_size=10000, input_len=10, test_rate = 0.2):
+def load_data(data_size=10000, input_len=9, test_rate=0.2):
     data_file = os.path.join(data_dir, "basic_seq2seq-"+str(data_size)+".pk")
     if os.path.exists(data_file):
         with open(data_file, "rb") as f:
@@ -36,28 +36,69 @@ def generate_data(data_size, input_len):
         for char in input_chars:
             out_char_index = (char_index_dict[char]+init_state)%chars_len
             output_chars.append(chars[out_char_index])
+        input_chars.append(".")
+        output_chars.append(".")
         input_seq.append(input_chars)
         output_seq.append(output_chars)
-    return [np.array(input_seq), np.array(output_seq)]
+    return [input_seq, output_seq]
 
 DataSets = namedtuple("DataSets", ["train", "test"])
 
 
 class DataSet():
-    def __init__(self, input_seq, output_seq):
-        self._input_seq = input_seq
-        self._output_seq = output_seq
+    def __init__(self, input_seqs, output_seqs):
+        self._input_seqs = input_seqs
+        self._output_seqs = output_seqs
+        self._input_seqs_index = []
+        self._output_seqs_index = []
+
         self._epochs_completed = 0
         self._index_in_epoch = 0
-        self._num_examples = len(input_seq)
+        self._num_examples = len(input_seqs)
+
+        self._vocab_size = 0
+        self._input_len = len(self._input_seqs[0])
+        self._output_len = len(self._output_seqs[0])
+
+        self._word_index_dict = dict()
+        self._index_word_dict = dict()
+        self.build_dataset()
+
+    def build_dataset(self):
+        chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789.'
+        self._vocab_size = len(chars)
+        for (i, char) in enumerate(chars):
+            self._word_index_dict[char] = i
+            self._index_word_dict[i] = char
+
+        for seq in self._input_seqs:
+            self._input_seqs_index.append([self._word_index_dict[char] for char in seq])
+
+        for seq in self._output_seqs:
+            self._output_seqs_index.append([self._word_index_dict[char] for char in seq])
+
+        self._input_seqs_index = np.array(self._input_seqs_index)
+        self._output_seqs_index = np.array(self._output_seqs_index)
+
+    @property
+    def vocab_size(self):
+        return self._vocab_size
+
+    @property
+    def input_len(self):
+        return self._input_len
+
+    @property
+    def output_len(self):
+        return self._output_len
 
     @property
     def input_seq(self):
-        return self._input_seq
+        return self._input_seqs
 
     @property
     def output_seq(self):
-        return self._output_seq
+        return self._output_seqs
 
     @property
     def num_examples(self):
@@ -76,17 +117,18 @@ class DataSet():
             # Shuffle the data
             perm = np.arange(self._num_examples)
             np.random.shuffle(perm)
-            self._input_seq = self._input_seq[perm]
-            self._output_seq = self._output_seq[perm]
+            self._input_seqs_index = self._input_seqs_index[perm]
+            self._output_seqs_index = self._output_seqs_index[perm]
             # Start next epoch
             start = 0
             self._index_in_epoch = batch_size
             assert batch_size <= self._num_examples
         end = self._index_in_epoch
-        return self._input_seq[start:end], self._output_seq[start:end]
+        return self._input_seqs_index[start:end], self._input_seqs_index[start:end]
+
+    # def seq2word(self, index_seq):
 
 
 if __name__ == '__main__':
     train_data, test_data = load_data()
-    print(train_data.input_seq[0])
-    print(train_data.output_seq[0])
+    print(train_data.next_batch(3))

@@ -1,9 +1,6 @@
 import tensorflow as tf
-import tensorlayer as tl
-tl.layers.RNNLayer
 from tensorflow.contrib import rnn
 from tensorflow.examples.tutorials.mnist import input_data
-import numpy as np
 
 
 class MnistRNNModel:
